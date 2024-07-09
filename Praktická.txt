@@ -1,0 +1,143 @@
+Informatika – Linux
+1.	Vytvoø nové uživatele pracovnik01, pracovník02, pracovnik03, s parametry: skupina users, defaultní home adresáø, shell bash, nastav heslo pracovník
+
+sudo useradd -c "Pracovník c.01" -p pracovník -g users -m -s /bin/bash pracovnik01
+sudo useradd -c "Pracovník c.02" -p pracovnik -g users -m -s /bin/bash pracovnik02
+sudo useradd -c "Pracovník c.03" -p pracovnik -g users -m -s /bin/bash pracovnik03
+
+heslo nastavit znovu, protože se neuloží: sudo passwd pracovnik01 -> nastavit heslo na pracovnik
+	Vysvìtlivky:
+	c – komentáø, p – heslo, m – domovský adresáø, s – shell
+Výpis uživatelù pracovník: 
+cat /etc/passwd | grep pracovnik
+
+	Skupina users jako hlavní: 
+	sudo usermod -aG users pracovnik01
+	sudo usermod -aG users pracovnik02
+	sudo usermod -aG users pracovnik03
+
+2.	Založit skupinu Workers, GID 7000
+sudo groupadd -g 7000 Workers 
+
+3.	Zmìnit defaultní skupinu uživatele pracovnik01 na skupinu Workers
+sudo usermod -g Workers pracovnik01 – zmìním defaultní skupinu
+
+4.	Pøiøadit uživatele pracovník01 do skupiny sudo
+sudo usermod -aG sudo pracovnik01
+
+5.	Pøiøadit uživatele pracovnik02 a pracovnik03 do skupiny Workers
+sudo usermod -aG Workers pracovnik02
+sudo usermod -aG Workers pracovnik03
+
+
+
+6.	Pøepnout se do úètu pracovnik01
+sudo su pracovnik01
+
+7.	Z volného místa na pevném (virtuálním) disku vytvoøit diskový oddíl a ten pøipojit jako /zaloha
+Nejprve vytvoøíme nový diskový oddíl:
+Sudo fdisk -l
+sudo  fdisk /dev/sda
+pak stiskneme klávesu n jako new a proklikáme vytvoøení a zapíšeme pomocí w 
+Nyní musíme provést formátování diskového oddílu: 
+sudo fdisk -l
+-	Zjistime o který disk se jedna ? napr 4
+Sudo mkfs.ext4 /dev/sda4 
+	pak v /home adresáøi vytvoøíme adresáø zaloha
+	sudo mkdir /home/zaloha
+	poté provedeme namountování diskového oddílu:
+	Nejprve si musíte zjistit ID pøipojených diskových oddílù: sudo blkid
+	Dále je potøeba editovat soubor “tabulka filesystémù“ -> /etc/fstab	
+	sudo vi /etc/fstab -> (pro úpravu stiskni CTRL+I)
+	Do tabulky pøidáme další øádek, který bude obsahovat údaje zjištìné pøíkazem sudo blkid
+	Pø. 
+UUID=46720e4e-8cc7-423b-bf31-cfb0e4f8f1cd /home/zaloha ext4 defaults,discard 0 2
+	Po uložení provedeme namountování disku: sudo mount -a 		//terminal
+8.	V domovském adresáøi vytvoøit adresáø Scripts
+cd /home/pracovnik01
+sudo mkdir Scripts
+
+9.	V adresáøi Scripts vytvoøit skript vypis01.sh, který pùjde spustit pro vlastníka a pro ostatní (NE pro skupinu) a který: 
+cd /Scripts
+sudo vi vypis01.sh 
+práva pro skript vypis01
+chmod u+x vypis01.sh
+chmod o+x vypis01.sh
+chmod g-x vypis01.sh //odebereme práva spuštìní souboru pro skupinu 
+(sudo chmod 747 vypis01.sh)
+
+Ovìøení - ve Scripts dáme ls -l a mìli bychom u souboru vypis01.sh mít práva takhle: 
+-rwx (vlastník mùže vše) r—(skupina mùže pouze èíst) r-x (ostatní mohou èíst a spouštìt) 
+Sudo vi vypis01.sh
+2 terminál:
+cd /home/pracovnik01/Scripts
+sudo touch vypis_proc.txt
+sudo touch syslog_dnes.txt
+sudo touch soubory_pdf.txt
+sudo touch chyby.txt
+Zavøít 2 terminal 
+a)	Bude po spuštìní vypisovat obsah adresáøe /proc a spolu s aktuálním datumem (nejprve datum, a pak výpis) postupnì ukládat do souboru vypis_proc.txt
+Nejdøíve vytvoøíme textový soubor vypis_proc.txt (pomocí sudo vi vypis_proc.txt) – uz vytvoren
+DO VI !!! :
+#! /bin/bash
+date >> /home/pracovnik01/vypis_proc.txt
+ls -alF /proc >> /home/pracovnik01/vypis_proc.txt
+b)	Dnešní datum a vypíše všechny záznamy ze souboru /var/log/syslog a uloží do souboru syslog_dnes.txt
+date>>/home/pracovnik01/syslog_dnes.txt
+cat /var/log/syslog>>/home/pracovnik01/syslog_dnes.txt
+
+c)	Bude vyhledávat všechny soubory s koncovkou .pdf v celém adresáøovém prostoru a spolu s aktuálním datumem (nejprve datum, a pak výpis) bude postupnì ukládat do souboru soubory_pdf.txt a chybové hlášky do souboru chyby.txt
+find / -name ‘*.pdf’ >> soubory_pdf.txt
+´	        find / -name ‘*.pdf’ 2 >> chyby.txt
+!!! Všechny výpisy se budou pøidávat na konec jednotlivých souborù!!!
+OPRAVIT SI VŠUDE ‘ V LINUXU RUÈNÌ !!!
+KONEC VI
+Spuštìní scriptu :
+sh vypis01.sh			(sudo sh vypis01.sh)
+
+10.	Zazálohuj (pomocí tar) adresáø /var/log do souboru s dnešním datumem a pak zálohu obnov do novì vytvoøeného adresáøe Obnova (v home directory)°
+
+Záloha:
+SPUSTIT v adresáøi /zaloha !!!!! :
+cd /home/zaloha
+sudo tar -cvzf 01072022_zaloha.tgz –one-file-systém –ignore-failed-read –exclude=01072022_zaloha.tgz /var/log
+	Obnova:
+(cd /home)
+ll pokud je Obnova tak nic, jinak :
+(sudo mkdir Obnova)
+	Nejdøív si zkopíruju pomocí sudo cp 01072022_zaloha.tgz /home/Obnova/
+Kde pak zadám tohle:
+
+cd /home/Obnova
+	sudo tar -xvf 01072022_zaloha.tgz
+	A pak smažu soubor tgz pomocí:
+	sudo rm 01072022_zaloha.tgz
+
+
+
+
+
+
+
+
+11.	V adresáøi Scripts vytvoøit skript add_users.sh, který:
+a)	Založí skupinu Students, GID 5000, pøed založením zkontroluje, zda tato skupina není založena nebo GID již použito
+cd /home/pracovnik01/Scripts
+Sudo vi add_users.sh
+
+ 
+
+b)	Z textového souboru users.txt naète zadané hodnoty a založí všechny uživatele v seznamu. Skript bude kontrolovat, zda je již uživatel s daným loginem nebo UID založen. Pokud je, vypíše informaci a uživatele nezaloží. O každém založeném uživateli bude na obrazovce vypsána informace. Kromì údajù v seznamu bude uživatelùm založen „defaultní“ adresáø, nastaveno prázdné heslo, shell=bash, budou mít pøiøazenou defaultní skupinu Students a budou dále zaøazení do skupiny users.
+
+
+
+
+
+
+
+
+
+
+	 
+Sude useradd -c “$kasarna“ -g $primegroup -G $groups -m -s
+

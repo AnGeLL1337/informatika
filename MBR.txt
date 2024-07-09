@@ -1,0 +1,47 @@
+ll /dev/sd*
+
+sudo fdisk /dev/sdb
+
+m -> help
+o -> new DOS partition table
+n -> add a new partition
+p -> primary
+1 number 
+Velikost -> +5G
+e -> extended
+2 default number
+First sector -> Enter (Default)
+Last sector -> Default
+
+Keï dáme znova new extended
+tak sa pridá logicky disk o velikosti extedned default
+
+p-> vypíše partition table
+w-> write table and exit !!! Nezabudnú
+
+Extended neformátujeme !!!
+sudo mkfs.ext4 /dev/sdb1 a sdb5
+
+df -k
+
+
+Diskový oddil /dev/sdb1 pripojit jako /obnova -> se zápisem do fstab
+                                              -> práva na zápis
+                                              
+sudo mkdir /obnova
+sudo blkid -> Získanie UUID sdb1
+sudo vi /etc/fstab
+UUID=<UUID sdb> /obnova    ext4    defaults     0 2
+sudo mount -a
+
+df -k -> zobrazeni mountov
+sudo chmod o+w /obnova
+
+
+who -r -> Run level od kedy
+who -b -> Kedy system bootoval
+who -aH
+
+ls -l /lib/systemd/system/runlevel*
+systemctl get-default -> default RL
+systemctl list-dependencies graphical.target ->závislosti služieb na graphical.target

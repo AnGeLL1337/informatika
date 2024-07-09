@@ -1,0 +1,47 @@
+1. Vytvoøení uživatelù student10, student11, student12, UID 5000-5002, defaultní skupina
+users, defaultní home adresáø, shell bash, nastav heslo student
+sudo useradd -u 5000 -g users -m -s /bin/bash student10
+sudo useradd -u 5001 -g users -m -s /bin/bash student11
+sudo useradd -u 5002 -g users -m -s /bin/bash student12
+sudo passwd student10
+sudo passwd student11
+sudo passwd student12
+2. Založit skupinu Students, GID 5000
+sudo groupadd -g 5000 Students
+3. Pøiøadit uživatele student10 do skupiny Students a sudo
+sudo usermod -aG Students student10
+sudo usermod -aG sudo student10
+4. Zmìnit defaultní skupinu uživatelù student11 a student12 na skupinu Students
+sudo usermod -g Students student11
+sudo usermod -g Students student12
+5. Pøepnout se do úètu student10
+su - student10
+6. V domovském adresáøi založit adresáø Zkouska a v nìm vytvoøit prázdný textový soubor
+soubor1.txt a textový soubor obsahující nìjaký text soubor2.txt
+mkdir ~/Zkouska
+touch ~/Zkouska/soubor1.txt
+echo "Nìjaký text" > ~/Zkouska/soubor2.txt
+7. U souborù soubor1.txt a soubor2.txt zmìnit vlastnictví skupiny na Students
+sudo chown :Students ~/Zkouska/soubor1.txt ~/Zkouska/soubor2.txt
+8. V domovském adresáøi vytvoøit adresáø Scripts
+mkdir ~/Scripts
+9. V adresáøi Scripts vytvoøit skript script01, který...
+nano ~/Scripts/script01
+# Do skriptu vložte následující:
+#!/bin/bash
+datum=$(date '+%Y-%m-%d %H:%M:%S')
+ls /dev >> ~/Zkouska/vypis_dev.txt
+echo "$datum" >> ~/Zkouska/vypis_dev.txt
+find / -type f -name "*.txt" >> ~/Zkouska/soubory_txt.txt 2>> ~/Zkouska/chyby.txt
+echo "$datum" >> ~/Zkouska/soubory_txt.txt
+echo "$datum" >> ~/Zkouska/chyby.txt
+chmod +x ~/Scripts/script01
+10. Vytvoøené soubory ze skriptu zkopíruj do adresáøe Zkouska
+cp ~/Zkouska/vypis_dev.txt ~/Zkouska/soubory_txt.txt ~/Zkouska/chyby.txt ~/Zkouska
+11. Vypiš parametry síové karty do souboru network.txt (v adresáøi Zkouska)
+ifconfig > ~/Zkouska/network.txt
+12. Zazálohuj svùj celý home (domovský) adresáø do souboru s dnešním datumem a pak zálohu
+obnov do novì vytvoøeného adresáøe Obnova
+tar czf ~/Backup_$(date +%Y%m%d).tar.gz ~
+mkdir ~/Obnova
+tar xzf ~/Backup_$(date +%Y%m%d).tar.gz -C ~/Obnova

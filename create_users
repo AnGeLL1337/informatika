@@ -1,0 +1,35 @@
+#! /bin/bash
+
+skupinaW="Workers"
+
+sudo groupadd -g 7000 $skupina
+echo "Skupina je zalozena"
+
+for ((x=1; x<4; x++)) do
+jmeno="Pracovnik0$x"
+skupina="users"
+shell="/bin/bash"
+
+
+if grep -q $jmeno: /etc/passwd
+then
+echo "Uzivatel $jmeno je jiz zalozen"
+fi
+
+
+sudo useradd -m -s $shell -g $skupina $jmeno
+echo "Byl zalozen '$jmeno'."
+
+
+if [ $x -eq 1 ]; then
+                sudo usermod -g $skupinaW $jmeno
+sudo usermod -aG sudo $jmeno
+echo "Uzivatel $jmeno byl pridelen do skupiny $skupinaW a suda"
+else
+sudo usermod -aG $skupinaW $jmeno
+echo "Uzivatel $jmeno byl pridan do skupiny $skupinaW" 
+
+        fi
+
+
+done
